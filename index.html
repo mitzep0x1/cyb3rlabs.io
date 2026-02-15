@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyb3rLabs | Cybersecurity Research</title>
+    <meta name="description" content="Cyb3rLabs - Cybersecurity research, detection engineering, threat hunting writeups, and open-source defensive security tools.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-primary: #00ff41;
+            --green-dim: #00cc33;
+            --green-dark: #009926;
+            --green-glow: rgba(0, 255, 65, 0.15);
+            --green-subtle: rgba(0, 255, 65, 0.05);
+            --bg-primary: #0a0a0a;
+            --bg-card: #111111;
+            --border-color: rgba(0, 255, 65, 0.12);
+            --text-dim: #4a4a4a;
+            --text-mid: #666666;
+            --white: #e0e0e0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-primary);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 3px);
+        }
+        @keyframes blink { 0%,50%{opacity:1} 51%,100%{opacity:0} }
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes glowPulse {
+            0%,100%{text-shadow:0 0 10px rgba(0,255,65,0.3),0 0 20px rgba(0,255,65,0.1)}
+            50%{text-shadow:0 0 20px rgba(0,255,65,0.5),0 0 40px rgba(0,255,65,0.2)}
+        }
+        .animate-in { opacity:0; animation:fadeInUp 0.6s ease forwards; }
+        .delay-1{animation-delay:.1s} .delay-2{animation-delay:.2s} .delay-3{animation-delay:.3s}
+        .delay-4{animation-delay:.4s} .delay-5{animation-delay:.5s}
+
+        /* NAV */
+        nav {
+            position:fixed; top:0; width:100%; z-index:100;
+            padding:1.2rem 2rem;
+            background:rgba(10,10,10,0.9);
+            backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border-color);
+            display:flex; justify-content:space-between; align-items:center;
+        }
+        .nav-logo {
+            font-size:1.1rem; font-weight:600; color:var(--green-primary);
+            text-decoration:none; letter-spacing:2px; text-transform:uppercase;
+            animation:glowPulse 3s ease-in-out infinite;
+        }
+        .nav-logo span { color:var(--text-dim); font-weight:300; }
+        .nav-links { display:flex; gap:2.5rem; list-style:none; }
+        .nav-links a {
+            color:var(--text-mid); text-decoration:none; font-size:0.75rem;
+            letter-spacing:1.5px; text-transform:uppercase; transition:color 0.3s; position:relative;
+        }
+        .nav-links a::after {
+            content:''; position:absolute; bottom:-4px; left:0;
+            width:0; height:1px; background:var(--green-primary); transition:width 0.3s;
+        }
+        .nav-links a:hover { color:var(--green-primary); }
+        .nav-links a:hover::after { width:100%; }
+        .hamburger {
+            display:none; flex-direction:column; gap:5px;
+            cursor:pointer; background:none; border:none; padding:5px;
+        }
+        .hamburger span { width:22px; height:1.5px; background:var(--green-primary); transition:all 0.3s; }
+
+        /* HERO */
+        .hero {
+            min-height:100vh; display:flex; align-items:center;
+            padding:8rem 2rem 6rem; position:relative;
+        }
+        .hero-bg-grid {
+            position:absolute; top:0; left:0; width:100%; height:100%;
+            background-image:linear-gradient(rgba(0,255,65,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,0.03) 1px,transparent 1px);
+            background-size:60px 60px; pointer-events:none;
+        }
+        .hero-content { max-width:900px; margin:0 auto; width:100%; position:relative; }
+        .terminal-prompt {
+            display:inline-flex; align-items:center; gap:0.5rem;
+            font-size:0.75rem; color:var(--text-dim); margin-bottom:2rem;
+        }
+        .terminal-prompt .user { color:var(--green-primary); }
+        .terminal-prompt .path { color:var(--green-dark); }
+        .terminal-prompt .cursor {
+            display:inline-block; width:8px; height:16px;
+            background:var(--green-primary); animation:blink 1s step-end infinite; margin-left:2px;
+        }
+        .hero-prefix {
+            font-size:0.8rem; color:var(--green-dark); letter-spacing:3px;
+            text-transform:uppercase; margin-bottom:1.5rem;
+            display:flex; align-items:center; gap:0.8rem;
+        }
+        .hero-prefix::before { content:'>'; color:var(--green-primary); font-size:1rem; }
+        .hero-title {
+            font-size:clamp(2.5rem,6vw,4.5rem); font-weight:700;
+            color:var(--green-primary); line-height:1.1; margin-bottom:1.5rem;
+            animation:glowPulse 4s ease-in-out infinite;
+        }
+        .hero-title .accent {
+            color:var(--white); display:block; font-weight:300;
+            font-size:0.5em; margin-top:0.5rem; animation:none;
+        }
+        .hero-desc {
+            font-size:0.9rem; color:var(--text-mid); max-width:600px;
+            line-height:1.8; margin-bottom:2.5rem; font-weight:300;
+        }
+        .hero-desc .highlight { color:var(--green-dim); }
+        .hero-cta { display:flex; gap:1.2rem; flex-wrap:wrap; }
+        .btn {
+            padding:0.8rem 2rem; font-family:'JetBrains Mono',monospace;
+            font-size:0.75rem; letter-spacing:1.5px; text-transform:uppercase;
+            text-decoration:none; border:1px solid var(--green-primary);
+            transition:all 0.3s; cursor:pointer; position:relative; overflow:hidden;
+        }
+        .btn-primary { background:var(--green-primary); color:var(--bg-primary); font-weight:600; }
+        .btn-primary:hover { background:transparent; color:var(--green-primary); box-shadow:0 0 30px rgba(0,255,65,0.2); }
+        .btn-secondary { background:transparent; color:var(--green-primary); }
+        .btn-secondary:hover { background:var(--green-glow); box-shadow:0 0 30px rgba(0,255,65,0.1); }
+
+        /* SECTIONS */
+        section { padding:6rem 2rem; }
+        .section-container { max-width:900px; margin:0 auto; }
+        .section-header { margin-bottom:3rem; }
+        .section-label {
+            font-size:0.7rem; color:var(--green-dark); letter-spacing:3px;
+            text-transform:uppercase; margin-bottom:1rem;
+            display:flex; align-items:center; gap:0.8rem;
+        }
+        .section-label::before { content:'#'; color:var(--green-primary); }
+        .section-title { font-size:clamp(1.5rem,3vw,2rem); color:var(--white); font-weight:600; }
+        .section-title span { color:var(--green-primary); }
+        .section-divider { border-top:1px solid var(--border-color); }
+
+        /* COMING SOON */
+        .coming-soon {
+            border:1px solid var(--border-color);
+            padding:3rem 2rem;
+            text-align:center;
+            background:var(--bg-card);
+            position:relative;
+            overflow:hidden;
+        }
+        .coming-soon::before {
+            content:'';
+            position:absolute;
+            top:0; left:0;
+            width:100%; height:2px;
+            background:linear-gradient(90deg, transparent, var(--green-primary), transparent);
+            opacity:0.5;
+        }
+        .coming-soon-icon {
+            font-size:1.2rem;
+            color:var(--green-primary);
+            margin-bottom:1.2rem;
+            animation:glowPulse 4s ease-in-out infinite;
+        }
+        .coming-soon-text {
+            font-size:0.82rem;
+            color:var(--text-mid);
+            font-weight:300;
+            line-height:1.8;
+        }
+        .coming-soon-text .highlight { color:var(--green-dim); }
+        .coming-soon-tag {
+            display:inline-block;
+            margin-top:1.5rem;
+            font-size:0.6rem;
+            padding:0.4rem 1rem;
+            border:1px solid rgba(0,255,65,0.2);
+            color:var(--green-dark);
+            letter-spacing:2px;
+            text-transform:uppercase;
+        }
+
+        /* ABOUT */
+        .about-content {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:3rem;
+            align-items:start;
+        }
+        .about-text {
+            font-size:0.85rem; color:var(--text-mid);
+            line-height:1.9; font-weight:300;
+        }
+        .about-text p { margin-bottom:1.2rem; }
+        .about-text .highlight { color:var(--green-dim); }
+        .about-links { display:flex; flex-direction:column; gap:1rem; }
+        .about-link {
+            display:flex; align-items:center; gap:1rem;
+            padding:1.2rem 1.5rem; border:1px solid var(--border-color);
+            text-decoration:none; transition:all 0.3s;
+        }
+        .about-link:hover {
+            border-color:rgba(0,255,65,0.3);
+            background:rgba(0,255,65,0.02);
+        }
+        .about-link-label {
+            font-size:0.6rem; color:var(--text-dim);
+            letter-spacing:2px; text-transform:uppercase; display:block;
+        }
+        .about-link-value {
+            font-size:0.8rem; color:var(--green-primary);
+            display:block; margin-top:0.3rem;
+        }
+        .tools-strip {
+            margin-top:3rem; padding-top:2rem;
+            border-top:1px solid var(--border-color);
+        }
+        .tools-label {
+            font-size:0.65rem; color:var(--text-dim);
+            letter-spacing:2px; text-transform:uppercase; margin-bottom:1.2rem;
+        }
+        .tools-list { display:flex; flex-wrap:wrap; gap:0.8rem; }
+        .tool-item {
+            font-size:0.7rem; padding:0.5rem 1rem;
+            border:1px solid var(--border-color); color:var(--green-dark);
+            letter-spacing:1px; transition:all 0.3s;
+        }
+        .tool-item:hover {
+            border-color:var(--green-primary); color:var(--green-primary);
+            background:var(--green-subtle);
+        }
+
+        /* FOOTER */
+        footer {
+            padding:2.5rem 2rem; border-top:1px solid var(--border-color);
+            display:flex; justify-content:space-between; align-items:center;
+            max-width:900px; margin:0 auto;
+        }
+        .footer-text { font-size:0.65rem; color:var(--text-dim); letter-spacing:1px; }
+        .footer-links { display:flex; gap:2rem; }
+        .footer-links a {
+            font-size:0.65rem; color:var(--text-dim); text-decoration:none;
+            letter-spacing:1px; transition:color 0.3s;
+        }
+        .footer-links a:hover { color:var(--green-primary); }
+
+        /* RESPONSIVE */
+        @media (max-width:768px) {
+            nav { padding:1rem 1.5rem; }
+            .nav-links {
+                display:none; position:absolute; top:100%; left:0; width:100%;
+                background:rgba(10,10,10,0.98); flex-direction:column;
+                padding:2rem; gap:1.5rem; border-bottom:1px solid var(--border-color);
+            }
+            .nav-links.active { display:flex; }
+            .hamburger { display:flex; }
+            .hero { padding:7rem 1.5rem 3rem; }
+            .about-content { grid-template-columns:1fr; }
+            .coming-soon-text br { display:none; }
+            footer { flex-direction:column; gap:1rem; text-align:center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <a href="#" class="nav-logo">cyb3r<span>labs</span></a>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#research">Research</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#blog">Blog</a></li>
+            <li><a href="#about">About</a></li>
+        </ul>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-content">
+            <div class="terminal-prompt animate-in delay-1">
+                <span class="user">root@cyb3rlabs</span><span>:</span><span class="path">~/research</span><span>$</span>
+                <span class="cursor"></span>
+            </div>
+            <p class="hero-prefix animate-in delay-2">Cybersecurity Research</p>
+            <h1 class="hero-title animate-in delay-3">
+                Cyb3rLabs
+                <span class="accent">Detection Engineering · Threat Hunting · DFIR</span>
+            </h1>
+            <p class="hero-desc animate-in delay-4">
+                Research, <span class="highlight">open-source tools</span>, and writeups 
+                on defensive security. Exploring detection logic, 
+                hunting methodologies, and <span class="highlight">incident response</span> techniques.
+            </p>
+            <div class="hero-cta animate-in delay-5">
+                <a href="#about" class="btn btn-primary">About me</a>
+                <a href="https://github.com/mitzep0x1" target="_blank" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- RESEARCH -->
+    <section id="research" class="section-divider">
+        <div class="section-container">
+            <div class="section-header">
+                <p class="section-label">Research</p>
+                <h2 class="section-title">Focus <span>areas</span></h2>
+            </div>
+            <div class="coming-soon">
+                <div class="coming-soon-icon">{ ~ }</div>
+                <p class="coming-soon-text">
+                    Writeups on <span class="highlight">detection engineering</span>, threat hunting methodologies,<br>
+                    DFIR techniques, and security automation.<br>
+                    Documenting what I learn, break, and build.
+                </p>
+                <span class="coming-soon-tag">Coming soon</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section-divider">
+        <div class="section-container">
+            <div class="section-header">
+                <p class="section-label">Projects</p>
+                <h2 class="section-title">Open-source <span>tools</span></h2>
+            </div>
+            <div class="coming-soon">
+                <div class="coming-soon-icon">>&_</div>
+                <p class="coming-soon-text">
+                    Tools and scripts for <span class="highlight">blue teamers</span>.<br>
+                    Detection rules, forensic analyzers, and hunting utilities.<br>
+                    All open-source. All on <span class="highlight">GitHub</span>.
+                </p>
+                <span class="coming-soon-tag">Coming soon</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOG -->
+    <section id="blog" class="section-divider">
+        <div class="section-container">
+            <div class="section-header">
+                <p class="section-label">Blog</p>
+                <h2 class="section-title">Latest <span>writeups</span></h2>
+            </div>
+            <div class="coming-soon">
+                <div class="coming-soon-icon">cat /dev/null</div>
+                <p class="coming-soon-text">
+                    Technical deep-dives, hunt walkthroughs,<br>
+                    and notes from the <span class="highlight">trenches</span>.<br>
+                    First posts dropping soon.
+                </p>
+                <span class="coming-soon-tag">Coming soon</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section-divider">
+        <div class="section-container">
+            <div class="section-header">
+                <p class="section-label">About</p>
+                <h2 class="section-title">Who's <span>behind this</span></h2>
+            </div>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>Hey, I'm <span class="highlight">Miguel Itzep</span> (mitzep0x1). Blue teamer with 8+ years in cybersecurity, currently working in <span class="highlight">Threat Hunting & Incident Response</span> across EU and US environments.</p>
+                    <p>Cyb3rLabs is where I document my research, share tools I build, and write about detection engineering, threat hunting, and DFIR. If it helps defenders get better at their job, it belongs here.</p>
+                    <p>When I'm not hunting threats, I'm probably breaking something in a lab to understand how to detect it better.</p>
+                </div>
+                <div class="about-links">
+                    <a href="https://x.com/mitzep0x1" target="_blank" class="about-link">
+                        <div>
+                            <span class="about-link-label">X / Twitter</span>
+                            <span class="about-link-value">mitzep0x1</span>
+                        </div>
+                    </a>
+                    <a href="https://linkedin.com/in/mitzep0x1" target="_blank" class="about-link">
+                        <div>
+                            <span class="about-link-label">LinkedIn</span>
+                            <span class="about-link-value">mitzep0x1</span>
+                        </div>
+                    </a>
+                    <a href="mailto:mitzep0x1@proton.me" class="about-link">
+                        <div>
+                            <span class="about-link-label">Contact</span>
+                            <span class="about-link-value">mitzep0x1@proton.me</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="tools-strip">
+                <p class="tools-label">Tools & Technologies</p>
+                <div class="tools-list">
+                    <span class="tool-item">Wazuh</span>
+                    <span class="tool-item">Velociraptor</span>
+                    <span class="tool-item">Elastic Security</span>
+                    <span class="tool-item">CrowdStrike</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <span class="footer-text">&copy; 2025 Cyb3rLabs &mdash; mitzep0x1</span>
+        <div class="footer-links">
+            <a href="https://x.com/mitzep0x1" target="_blank">X</a>
+            <a href="https://github.com/mitzep0x1" target="_blank">GitHub</a>
+            <a href="https://linkedin.com/in/mitzep0x1" target="_blank">LinkedIn</a>
+        </div>
+    </footer>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+        hamburger.addEventListener('click', () => navLinks.classList.toggle('active'));
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => navLinks.classList.remove('active'));
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.coming-soon, .about-content, .tools-strip').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(el);
+        });
+
+        window.addEventListener('scroll', () => {
+            document.querySelector('nav').style.borderBottomColor =
+                window.scrollY > 50 ? 'rgba(0,255,65,0.2)' : 'rgba(0,255,65,0.12)';
+        });
+    </script>
+</body>
+</html>
