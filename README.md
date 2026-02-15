@@ -1,1 +1,1 @@
-cyb3rlabs site
+cyb3rlabs.io site
